@@ -54,7 +54,10 @@ class NoisePeer extends stream.Duplex {
   }
 
   _onhandshake () {
-    this.emit('handshake')
+    this.emit('handshake', {
+      remoteStaticKey: this._handshake.state.rs,
+      remoteEphemeralKey: this._handshake.state.re
+    })
 
     var header = Buffer.alloc(secretstream.HEADERBYTES)
 
