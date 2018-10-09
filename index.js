@@ -1,6 +1,6 @@
 var secretstream = require('secretstream-stream')
 var simpleHandshake = require('simple-handshake')
-var stream = require('stream')
+var stream = require('readable-stream')
 
 class NoisePeer extends stream.Duplex {
   constructor (rawStream, isInitiator, opts) {
