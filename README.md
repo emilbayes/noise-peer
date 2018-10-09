@@ -46,9 +46,30 @@ sec.end('beep boop\n')
 
 Create a new peer, performing handshaking transparently. Note that all messages
 are chunked to ~64kb size due to a 2 byte length header. By default the Noise
-`NN` pattern is used, which simply creates a [forward secret](https://en.wikipedia.org/wiki/Forward_secrecy)
-channel. This does not authenticate either party. To have mutual authentication
-use the `XX` pattern, add a static keypair and provide a `onstatickey` function:
+`NN` pattern is used, which simply creates a
+[forward secret](https://en.wikipedia.org/wiki/Forward_secrecy) channel.
+This does not authenticate either party. See below for other handshake pattern
+exapmles.
+
+### `secureStream.initiator`
+
+Boolean indicating whether the stream is a client/initiator or a
+server/responder, as given by the `isInitiator` constructor argument.
+
+### `secureStream.rawStream`
+
+Access to the `rawStream` passed in the constructor
+
+### `secureStream.on('handshake', {remoteStaticKey, remoteEphemeralKey})`
+
+Emitted when the handshaking has succeeded. `remoteStaticKey` may be `null` if
+you're using a `pattern` which does not use or receive a remote static key. Both
+will be Buffers, but be cleared immediately after the handshake event.
+
+### Handshake Pattern examples
+
+To have mutual authentication use the `XX` pattern, add a static keypair and
+provide a `onstatickey` function on both sides:
 
 ```js
 var opts = {
@@ -56,6 +77,30 @@ var opts = {
   staticKeyPair: peer.keygen(),
   onstatickey: function (remoteKey, done) {
     if (remoteKey.equals(someSavedKey)) return done()
+
+    return done(new Error('Unauthorized key'))
+  }
+}
+```
+
+To have have client authentication but use a preshared server public key use the
+`XK` pattern, add a static keypair on both sides, a remote static key on the
+client and provide a `onstatickey` function on the server:
+
+```js
+var serverKeys = peer.keygen()
+
+var clientOpts = {
+  pattern: 'XK',
+  staticKeyPair: peer.keygen(),
+  remoteStaticKey: serverKeys.publicKey
+}
+
+var serverOpts = {
+  pattern: 'XK',
+  staticKeyPair: serverKeys,
+  onstatickey: function (remoteKey, done) {
+    if (remoteKey.equals(someSavedClientKey)) return done()
 
     return done(new Error('Unauthorized key'))
   }
