@@ -6,6 +6,7 @@
   "dependencies": {
     "choppa": "^1.0.2",
     "duplexify": "^3.6.0",
+    "readable-stream": "^3.0.6",
     "secretstream-stream": "^1.0.0",
     "simple-handshake": "^1.0.1"
   },
