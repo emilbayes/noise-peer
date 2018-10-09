@@ -6,7 +6,9 @@ class NoisePeer extends stream.Duplex {
   constructor (rawStream, isInitiator, opts) {
     super()
 
-    this._rawStream = rawStream
+    this.initiator = isInitiator
+
+    this.rawStream = rawStream
     this._handshake = simpleHandshake(isInitiator, opts)
     this._transport = null
 
@@ -18,10 +20,10 @@ class NoisePeer extends stream.Duplex {
     // If client, start the handshaking
     if (isInitiator === true) this._sendhandshake()
 
-    this._rawStream.on('readable', this._onreadable.bind(this))
-    this._rawStream.on('drain', this._ondrain.bind(this))
-    this._rawStream.on('error', this.destroy.bind(this))
-    this._rawStream.on('close', this.destroy.bind(this))
+    this.rawStream.on('readable', this._onreadable.bind(this))
+    this.rawStream.on('drain', this._ondrain.bind(this))
+    this.rawStream.on('error', this.destroy.bind(this))
+    this.rawStream.on('close', this.destroy.bind(this))
 
     // kick the onreadable loop
     this._onreadable()
@@ -44,7 +46,7 @@ class NoisePeer extends stream.Duplex {
     this._handshake.send(null, (err, buf) => {
       if (err) return this.destroy(err)
 
-      this._rawStream.write(this._frame(buf)) // @mafintosh
+      this.rawStream.write(this._frame(buf)) // @mafintosh
       if (this._handshake.finished) return this._onhandshake()
 
       this._read()
@@ -61,7 +63,7 @@ class NoisePeer extends stream.Duplex {
       rx: null
     }
 
-    this._rawStream.write(this._frame(header)) // @mafintosh
+    this.rawStream.write(this._frame(header)) // @mafintosh
 
     if (this._writePending) {
       this._write(this._writePending.data, null, this._writePending.cb)
@@ -86,7 +88,7 @@ class NoisePeer extends stream.Duplex {
     var canContinue = true
     while (data.byteLength > 0) {
       var frameData = data.subarray(0, 0xffff - secretstream.ABYTES)
-      canContinue = this._rawStream.write(this._frame(this._transport.tx.encrypt(secretstream.TAG_MESSAGE, frameData)))
+      canContinue = this.rawStream.write(this._frame(this._transport.tx.encrypt(secretstream.TAG_MESSAGE, frameData)))
       data = data.subarray(frameData.byteLength)
     }
 
@@ -99,7 +101,7 @@ class NoisePeer extends stream.Duplex {
   }
 
   _final (cb) {
-    this._rawStream.write(this._frame(this._transport.tx.encrypt(secretstream.TAG_FINAL, Buffer.alloc(0))))
+    this.rawStream.write(this._frame(this._transport.tx.encrypt(secretstream.TAG_FINAL, Buffer.alloc(0))))
     cb()
   }
 
@@ -111,7 +113,7 @@ class NoisePeer extends stream.Duplex {
   }
 
   _readframeheader () {
-    const lengthPrefix = this._rawStream.read(2)
+    const lengthPrefix = this.rawStream.read(2)
     if (lengthPrefix === null) return false
     if (lengthPrefix.byteLength < 2) return this.destroy(new Error('Ended mid-length-prefix'))
 
@@ -121,7 +123,7 @@ class NoisePeer extends stream.Duplex {
   }
 
   _readframebody () {
-    const frame = this._rawStream.read(this._missing)
+    const frame = this.rawStream.read(this._missing)
     if (frame === null) return false
     if (frame.byteLength < this._missing) return this.destroy(new Error('Ended mid-frame'))
 
@@ -187,7 +189,7 @@ class NoisePeer extends stream.Duplex {
       if (this._transport.rx) this._transport.rx.destroy()
     }
 
-    this._rawStream.destroy(err)
+    this.rawStream.destroy(err)
     callback(err)
   }
 }
