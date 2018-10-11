@@ -6,8 +6,7 @@ var server = net.createServer(function onconnection (rawStream) {
   var sec = peer(rawStream, false)
 
   pump(sec, sec, function (err) {
-    if (err) return console.error('server', err)
-    console.log('server eos')
+    if (err) throw err
   })
 })
 
@@ -23,7 +22,6 @@ server.listen(function () {
 
   clientSec.on('end', function () {
     server.close()
-    console.log('client eos')
   })
 
   clientSec.write('Hello world')
