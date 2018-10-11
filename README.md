@@ -42,6 +42,11 @@ sec.end('beep boop\n')
 
 ## API
 
+### `var {publicKey, secretKey} = peer.keygen()`
+
+Generate a new key pair for use with `noiseOpts`. See the Handshake Pattern
+examples
+
 ### `var secureStream = peer(rawStream, isInitiator, [noiseOpts])`
 
 Create a new peer, performing handshaking transparently. Note that all messages
