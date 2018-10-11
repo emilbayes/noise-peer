@@ -23,7 +23,6 @@ server.listen(function () {
 
   clientSec.on('end', function () {
     server.close()
-    clientRawStream.end()
     console.log('client eos')
   })
 

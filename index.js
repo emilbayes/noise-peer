@@ -27,6 +27,7 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.on('drain', this._ondrain.bind(this))
     this.rawStream.on('error', this.destroy.bind(this))
     this.rawStream.on('close', this.destroy.bind(this))
+    this.on('finish', this.rawStream.end.bind(this.rawStream))
 
     // kick the onreadable loop
     this._onreadable()
