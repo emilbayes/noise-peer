@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/emilbayes/noise-peer.svg?branch=master)](https://travis-ci.org/emilbayes/noise-peer)
 
-> Simple one-to-one secure channels using Noise Protocol Framework and libsodium secretstream
+> Simple end-to-end encrypted, secure channels using Noise Protocol Framework and libsodium secretstream
 
 ## Usage
 

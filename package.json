@@ -1,7 +1,7 @@
 {
   "name": "noise-peer",
   "version": "0.0.0",
-  "description": "Simple one-to-one secure channels using Noise Protocol Framework and libsodium secretstream",
+  "description": "Simple end-to-end encrypted, secure channels using Noise Protocol Framework and libsodium secretstream",
   "main": "index.js",
   "dependencies": {
     "choppa": "^1.0.2",
