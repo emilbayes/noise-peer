@@ -1,9 +1,12 @@
 var secretstream = require('secretstream-stream')
 var simpleHandshake = require('simple-handshake')
 var stream = require('readable-stream')
+var assert = require('nanoassert')
 
 class NoisePeer extends stream.Duplex {
   constructor (rawStream, isInitiator, opts) {
+    assert(rawStream != null, 'rawStream must be duplex stream')
+    assert(typeof isInitiator === 'boolean', 'isInitiator must be boolean')
     super()
 
     this.initiator = isInitiator
