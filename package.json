@@ -13,7 +13,8 @@
   "devDependencies": {
     "c8": "^3.2.0",
     "pumpify": "^1.5.1",
-    "tape": "^4.8.0"
+    "tape": "^4.8.0",
+    "utp-native": "^2.1.0"
   },
   "scripts": {
     "test": "tape test.js",
