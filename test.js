@@ -1,20 +1,21 @@
 var test = require('tape')
 var peer = require('.')
-var duplexify = require('duplexify')
-var choppa = require('choppa')
+var transport = require('./tests/helpers/raw-stream')
 
 test('simple example', function (assert) {
   assert.plan(1)
   var t = transport()
 
-  var client = peer(t.c, true)
-  var server = peer(t.s, false)
+  var client = peer(t.a, true)
+  var server = peer(t.b, false)
 
   var body = ''
   server.on('data', function (ch) {
     body += ch
   })
 
+  server.on('error', assert.error)
+  client.on('error', assert.error)
   server.on('end', function () {
     assert.equal(body, 'Hello World', 'Should be same string')
     assert.end()
@@ -28,8 +29,8 @@ test('echo example', function (assert) {
   assert.plan(1)
   var t = transport()
 
-  var client = peer(t.c, true)
-  var server = peer(t.s, false)
+  var client = peer(t.a, true)
+  var server = peer(t.b, false)
 
   server.pipe(server)
 
@@ -51,8 +52,8 @@ test('large message', function (assert) {
   assert.plan(1)
   var t = transport()
 
-  var client = peer(t.c, true)
-  var server = peer(t.s, false)
+  var client = peer(t.a, true)
+  var server = peer(t.b, false)
 
   var body = []
   server.on('data', function (ch) {
@@ -70,12 +71,5 @@ test('large message', function (assert) {
   client.end()
 })
 
-function transport (n) {
-  var a = choppa(n)
-  var b = choppa(n)
 
-  return {
-    c: duplexify(a, b),
-    s: duplexify(b, a)
   }
-}
