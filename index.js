@@ -50,8 +50,10 @@ class NoisePeer extends stream.Duplex {
     this._handshake.send(null, (err, buf) => {
       if (err) return this.destroy(err)
 
+      this.rawStream.cork() // hack to put buf and header in the same packet
       this.rawStream.write(this._frame(buf)) // @mafintosh
       if (this._handshake.finished) return this._onhandshake()
+      this.rawStream.uncork()
 
       this._read()
     })
@@ -71,6 +73,7 @@ class NoisePeer extends stream.Duplex {
     }
 
     this.rawStream.write(this._frame(header)) // @mafintosh
+    this.rawStream.uncork()
 
     if (this._writePending) {
       this._write(this._writePending.data, null, this._writePending.cb)
