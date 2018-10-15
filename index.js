@@ -75,32 +75,79 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.write(this._frame(header)) // @mafintosh
     this.rawStream.uncork()
 
-    if (this._writePending) {
-      this._write(this._writePending.data, null, this._writePending.cb)
-      this._writePending = null
-    }
+    if (this._writePending) this._drainpendingwrite()
 
     this._read()
+  }
+
+  _drainpendingwrite () {
+    var self = this
+    var missing = self._writePending.chunks.length
+    var error = null
+    var chunks = self._writePending.chunks
+
+    for (var i = 0; i < chunks.length; i++) {
+      self._write(chunks[i].chunk, chunks[i].encoding, onwrite)
+    }
+
+    function onwrite (err) {
+      if (err) error = err
+      if (--missing) return
+      var fn = self._writePending.cb
+      self._writePending = null
+      return fn(error)
+    }
   }
 
   _onheader (header) {
     this._transport.rx = secretstream.decrypt(header, this._handshake.split.rx)
   }
 
-  _write (data, enc, cb) {
+  _write (chunk, encoding, cb) {
+    return this._writev([{ chunk, encoding }], cb)
+  }
+
+  _writev (chunks, cb) {
     if (this._handshake.finished === false) {
       // buffer {data, cb} and wait for handshake to finish succesful
-      this._writePending = { data, cb }
+      this._writePending = { chunks, cb }
       return
     }
 
+    var TRANSPORT_BYTES = 0xffff - secretstream.ABYTES - 2
+
     // fully handshook
     var canContinue = true
-    while (data.byteLength > 0) {
-      var frameData = data.subarray(0, 0xffff - secretstream.ABYTES)
-      canContinue = this.rawStream.write(this._frame(this._transport.tx.encrypt(secretstream.TAG_MESSAGE, frameData)))
-      data = data.subarray(frameData.byteLength)
+    var packet = []
+    var packetBytes = 0
+
+    for (var { chunk } of chunks) {
+      if (packetBytes + chunk.byteLength < TRANSPORT_BYTES) {
+        packet.push(chunk)
+        packetBytes += chunk.byteLength
+        continue
+      }
+
+      var remainingBytes = TRANSPORT_BYTES - packetBytes
+      packet.push(chunk.subarray(0, remainingBytes))
+      canContinue = this._sendtransport(Buffer.concat(packet, TRANSPORT_BYTES))
+
+      packet = []
+      packetBytes = 0
+      chunk = chunk.subarray(remainingBytes)
+
+      while (chunk.byteLength > TRANSPORT_BYTES) {
+        canContinue = this._sendtransport(chunk.subarray(0, TRANSPORT_BYTES))
+        chunk = chunk.subarray(TRANSPORT_BYTES)
+      }
+
+      if (chunk.byteLength > 0) {
+        packet.push(chunk)
+        packetBytes += chunk.byteLength
+      }
     }
+
+    if (packetBytes) canContinue = this._sendtransport(Buffer.concat(packet, packetBytes))
 
     if (canContinue === false) {
       this._draincb = cb
@@ -110,8 +157,31 @@ class NoisePeer extends stream.Duplex {
     cb(null)
   }
 
+  _sendtransport (msgBuf) {
+    return this.rawStream.write(this._frame(this._encrypt(msgBuf)))
+  }
+
+  _recvtransport (buf) {
+    return this._decrypt(buf)
+  }
+
+  _encrypt (plaintext, tag) {
+    if (tag == null) tag = secretstream.TAG_MESSAGE
+    return this._transport.tx.encrypt(tag, plaintext)
+  }
+
+  _decrypt (ciphertext) {
+    var plaintext = this._transport.rx.decrypt(ciphertext)
+    var didBackpressure = this.push(plaintext)
+
+    if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_REKEY)) this.emit('rekey')
+    if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_FINAL)) didBackpressure = this.push(null)
+
+    return didBackpressure
+  }
+
   _final (cb) {
-    this.rawStream.write(this._frame(this._transport.tx.encrypt(secretstream.TAG_FINAL, Buffer.alloc(0))))
+    if (this._transport.tx) this.rawStream.write(this._frame(this._encrypt(Buffer.alloc(0), secretstream.TAG_FINAL)))
     cb()
   }
 
@@ -153,16 +223,7 @@ class NoisePeer extends stream.Duplex {
     }
 
     // decrypt
-    const plaintext = this._transport.rx.decrypt(frame)
-    const shouldPause = this.push(plaintext) == null
-
-    // handle special message types
-    if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_REKEY)) this.emit('rekey')
-    if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_FINAL)) {
-      this.push(null)
-    }
-
-    if (shouldPause) this._paused = true
+    this._paused = this._recvtransport(frame)
 
     return true
   }
