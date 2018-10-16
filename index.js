@@ -14,6 +14,8 @@ class NoisePeer extends stream.Duplex {
     this.rawStream = rawStream
     this._handshake = simpleHandshake(isInitiator, opts)
     this._transport = null
+    // flag to indicate whether transport got a finish message
+    this._transportfinished = false
 
     this._missing = 0
     this._paused = false
@@ -26,7 +28,13 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.on('readable', this._onreadable.bind(this))
     this.rawStream.on('drain', this._ondrain.bind(this))
     this.rawStream.on('error', this.destroy.bind(this))
-    this.rawStream.on('close', this.destroy.bind(this))
+    var self = this
+    this.rawStream.on('close', function () {
+      if (self._handshake.finished === false) return self.destroy(new Error('Remote closed before handshake cloud complete'))
+      if (self._transport.rx != null && self._transportfinished === false) return self.destroy(new Error('Remote closed without sending a finish message (possible MITM vector)'))
+      self.destroy()
+    })
+
     this.on('finish', this.rawStream.end.bind(this.rawStream))
 
     // kick the onreadable loop
@@ -175,7 +183,10 @@ class NoisePeer extends stream.Duplex {
     var didBackpressure = this.push(plaintext)
 
     if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_REKEY)) this.emit('rekey')
-    if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_FINAL)) didBackpressure = this.push(null)
+    if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_FINAL)) {
+      this._transportfinished = true
+      didBackpressure = this.push(null)
+    }
 
     return didBackpressure
   }
