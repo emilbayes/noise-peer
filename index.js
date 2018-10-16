@@ -271,6 +271,8 @@ class NoisePeer extends stream.Duplex {
   }
 
   _destroy (err, callback) {
+    this._paused = true
+
     if (this._handshake.finished === false) this._handshake.destroy()
     if (this._transport) {
       if (this._transport.tx) this._transport.tx.destroy()
