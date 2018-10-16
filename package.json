@@ -17,7 +17,7 @@
     "utp-native": "^2.1.0"
   },
   "scripts": {
-    "test": "tape test.js",
+    "test": "tape tests/**.js",
     "coverage": "c8 npm test"
   },
   "repository": {

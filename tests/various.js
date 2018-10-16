@@ -71,5 +71,25 @@ test('large message', function (assert) {
   client.end()
 })
 
+test('chunk boundaries', function (assert) {
+  var t = transport()
 
+  var client = peer(t.a, true)
+  var server = peer(t.b, false)
+
+  server.on('data', function (ch) {
+    // assert.equal(ch.byteLength, 0xffff - secretstream.ABYTES)
+    assert.ok(ch.byteLength)
+  })
+
+  var smallMsg = Buffer.alloc(0xf0f, 'hello world')
+
+  server.on('end', function () {
+    assert.end()
+  })
+
+  for (var i = 0; i < 17; i++) {
+    client.write(smallMsg)
   }
+  client.end()
+})
