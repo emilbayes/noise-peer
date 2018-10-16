@@ -1,6 +1,6 @@
 var test = require('tape')
 var peer = require('../..')
-var transport = require('../helpers/raw-stream')
+var transport = require('../helpers/chopped-stream')
 
 // this test is still work in progress
 test('N server write', function (assert) {
