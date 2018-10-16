@@ -38,6 +38,10 @@ class NoisePeer extends stream.Duplex {
 
     this.on('finish', this.rawStream.end.bind(this.rawStream))
 
+    // Timeout if supported by the underlying stream
+    if (this.rawStream.setTimeout) this.setTimeout = this.rawStream.setTimeout.bind(this.rawStream)
+    this.rawStream.on('timeout', this.emit.bind(this, 'timeout'))
+
     // kick the onreadable loop
     this._onreadable()
   }

@@ -67,6 +67,17 @@ server/responder, as given by the `isInitiator` constructor argument.
 
 Access to the `rawStream` passed in the constructor
 
+### `secureStream.setTimeout(timeout[, callback])`
+
+Call `setTimeout` on the underlying `rawStream` if supported. This function will
+be undefined if not supported
+
+### `secureStream.on('timeout')`
+
+Bubble `timeout` event from the underlying `rawStream` if supported. You should
+call either `.end()` (which sends a `FINISH` message to the other peer) or
+`.destroy()` the stream manually (like eg. `net` specifies).
+
 ### `secureStream.on('handshake', {remoteStaticKey, remoteEphemeralKey})`
 
 Emitted when the handshaking has succeeded. `remoteStaticKey` may be `null` if
