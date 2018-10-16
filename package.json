@@ -4,14 +4,14 @@
   "description": "Simple end-to-end encrypted, secure channels using Noise Protocol Framework and libsodium secretstream",
   "main": "index.js",
   "dependencies": {
-    "choppa": "^1.0.2",
-    "duplexify": "^3.6.0",
     "readable-stream": "^3.0.6",
     "secretstream-stream": "^1.2.1",
     "simple-handshake": "^1.0.1"
   },
   "devDependencies": {
     "c8": "^3.2.0",
+    "choppa": "^1.0.2",
+    "duplexify": "^3.6.0",
     "pumpify": "^1.5.1",
     "tape": "^4.8.0",
     "utp-native": "^2.1.0"
