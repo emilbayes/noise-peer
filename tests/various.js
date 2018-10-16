@@ -1,6 +1,6 @@
 var test = require('tape')
-var peer = require('.')
-var transport = require('./tests/helpers/chopped-stream')
+var peer = require('..')
+var transport = require('./helpers/chopped-stream')
 
 test('simple example', function (assert) {
   assert.plan(1)
