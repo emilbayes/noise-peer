@@ -67,6 +67,12 @@ server/responder, as given by the `isInitiator` constructor argument.
 
 Access to the `rawStream` passed in the constructor
 
+### `secureStream.end([chunk][, encoding][, callback])`
+
+Special mention, as this also sends a `FINISH` message to the other party, which
+signals that the stream is to end and no more messages are to be expected. This
+is important to know that an active adversary did not truncate the stream.
+
 ### `secureStream.setTimeout(timeout[, callback])`
 
 Call `setTimeout` on the underlying `rawStream` if supported. This function will
