@@ -206,7 +206,10 @@ class NoisePeer extends stream.Duplex {
   _readframeheader () {
     const lengthPrefix = this.rawStream.read(2)
     if (lengthPrefix === null) return false
-    if (lengthPrefix.byteLength < 2) return this.destroy(new Error('Ended mid-length-prefix'))
+    if (lengthPrefix.byteLength < 2) {
+      this.destroy(new Error('Ended mid-length-prefix'))
+      return false
+    }
 
     // set framing
     this._missing = lengthPrefix.readUInt16BE(0)
@@ -216,7 +219,10 @@ class NoisePeer extends stream.Duplex {
   _readframebody () {
     const frame = this.rawStream.read(this._missing)
     if (frame === null) return false
-    if (frame.byteLength < this._missing) return this.destroy(new Error('Ended mid-frame'))
+    if (frame.byteLength < this._missing) {
+      this.destroy(new Error('Ended mid-frame'))
+      return false
+    }
 
     // reset framing
     this._missing = 0
@@ -257,9 +263,9 @@ class NoisePeer extends stream.Duplex {
   _onreadable () {
     while (this._paused === false) {
       if (this._missing === 0) { // has no framing
-        if (this._readframeheader() === false) break
+        if (this._readframeheader() !== true) break
       } else {
-        if (this._readframebody() === false) break
+        if (this._readframebody() !== true) break
       }
     }
   }
