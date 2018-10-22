@@ -32,7 +32,7 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.on('close', function () {
       if (self.destroyed) return
       if (self._handshake.finished === false) return self.destroy(new Error('Remote closed before handshake could complete (possible MITM vector)'))
-      if (self._transportfinished === false) return self.destroy(new Error('Remote closed without sending a finish message (possible MITM vector)'))
+      if (self._transportfinished === false) return self.destroy(new Error('Remote closed without sending a FINISH tag (possible MITM vector)'))
       self.destroy()
     })
 
@@ -170,11 +170,16 @@ class NoisePeer extends stream.Duplex {
     cb(null)
   }
 
-  _sendtransport (msgBuf) {
-    return this.rawStream.write(this._frame(this._encrypt(msgBuf)))
+  _sendtransport (msgBuf, tag) {
+    return this.rawStream.write(this._frame(this._encrypt(msgBuf, tag)))
   }
 
   _recvtransport (buf) {
+    if (this._transportfinished === true) {
+      this.destroy(new Error('Received message after FINISH tag (misbehaving remote)'))
+      return false
+    }
+
     return this._decrypt(buf)
   }
 
@@ -197,7 +202,7 @@ class NoisePeer extends stream.Duplex {
   }
 
   _final (cb) {
-    if (this._transport && this._transport.tx) this.rawStream.write(this._frame(this._encrypt(Buffer.alloc(0), secretstream.TAG_FINAL)))
+    if (this._transport && this._transport.tx) this._sendtransport(Buffer.alloc(0), secretstream.TAG_FINAL)
     cb()
   }
 
