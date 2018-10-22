@@ -197,7 +197,7 @@ class NoisePeer extends stream.Duplex {
   }
 
   _final (cb) {
-    if (this._transport.tx) this.rawStream.write(this._frame(this._encrypt(Buffer.alloc(0), secretstream.TAG_FINAL)))
+    if (this._transport && this._transport.tx) this.rawStream.write(this._frame(this._encrypt(Buffer.alloc(0), secretstream.TAG_FINAL)))
     cb()
   }
 
