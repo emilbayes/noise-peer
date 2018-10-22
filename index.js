@@ -31,8 +31,8 @@ class NoisePeer extends stream.Duplex {
     var self = this
     this.rawStream.on('close', function () {
       if (self.destroyed) return
-      if (self._transport.rx != null && self._transportfinished === false) return self.destroy(new Error('Remote closed without sending a finish message (possible MITM vector)'))
       if (self._handshake.finished === false) return self.destroy(new Error('Remote closed before handshake could complete (possible MITM vector)'))
+      if (self._transportfinished === false) return self.destroy(new Error('Remote closed without sending a finish message (possible MITM vector)'))
       self.destroy()
     })
 
