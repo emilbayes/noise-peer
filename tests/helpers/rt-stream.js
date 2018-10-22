@@ -3,12 +3,10 @@ var through = require('through2')
 
 module.exports = function rawStream (n) {
   var a = through(function (data, _, cb) {
-    console.log('a')
     if (--n) return cb(null, data)
     this.destroy()
   })
   var b = through(function (data, _, cb) {
-    console.log('b')
     if (--n) return cb(null, data)
     this.destroy()
   })
