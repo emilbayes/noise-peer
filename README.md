@@ -42,6 +42,8 @@ pump(sec, process.stdout)
 sec.end('beep boop\n')
 ```
 
+More examples are available in [examples](examples)
+
 ## API
 
 ### `var {publicKey, secretKey} = peer.keygen()`
