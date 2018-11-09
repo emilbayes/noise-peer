@@ -2,6 +2,7 @@ var secretstream = require('secretstream-stream')
 var simpleHandshake = require('simple-handshake')
 var stream = require('readable-stream')
 var assert = require('nanoassert')
+var sodium = require('sodium-universal')
 
 class NoisePeer extends stream.Duplex {
   constructor (rawStream, isInitiator, opts) {
@@ -85,6 +86,8 @@ class NoisePeer extends stream.Duplex {
       rx: null
     }
 
+    sodium.sodium_memzero(this._handshake.split.tx)
+
     this.rawStream.write(this._frame(header)) // @mafintosh
     this.rawStream.uncork()
 
@@ -114,6 +117,7 @@ class NoisePeer extends stream.Duplex {
 
   _onheader (header) {
     this._transport.rx = secretstream.decrypt(header, this._handshake.split.rx)
+    sodium.sodium_memzero(this._handshake.split.rx)
   }
 
   _write (chunk, encoding, cb) {
@@ -288,6 +292,9 @@ class NoisePeer extends stream.Duplex {
       if (this._transport.tx) this._transport.tx.destroy()
       if (this._transport.rx) this._transport.rx.destroy()
     }
+
+    sodium.sodium_memzero(this._handshake.split.tx)
+    sodium.sodium_memzero(this._handshake.split.rx)
 
     this.rawStream.destroy(err)
     callback(err)
