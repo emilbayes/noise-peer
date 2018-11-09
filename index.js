@@ -293,8 +293,10 @@ class NoisePeer extends stream.Duplex {
       if (this._transport.rx) this._transport.rx.destroy()
     }
 
-    sodium.sodium_memzero(this._handshake.split.tx)
-    sodium.sodium_memzero(this._handshake.split.rx)
+    if (this._handshake.split) {
+      sodium.sodium_memzero(this._handshake.split.tx)
+      sodium.sodium_memzero(this._handshake.split.rx)
+    }
 
     this.rawStream.destroy(err)
     callback(err)
