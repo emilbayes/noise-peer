@@ -78,6 +78,7 @@ class NoisePeer extends stream.Duplex {
       remoteStaticKey: this._handshake.state.rs,
       remoteEphemeralKey: this._handshake.state.re
     })
+    if (this.destroyed) return
 
     var header = Buffer.alloc(secretstream.HEADERBYTES)
 
@@ -195,8 +196,13 @@ class NoisePeer extends stream.Duplex {
   _decrypt (ciphertext) {
     var plaintext = this._transport.rx.decrypt(ciphertext)
     var didBackpressure = this.push(plaintext)
+    if (this.destroyed) return
 
-    if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_REKEY)) this.emit('rekey')
+    if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_REKEY)) {
+      this.emit('rekey')
+      if (this.destroyed) return
+    }
+
     if (this._transport.rx.decrypt.tag.equals(secretstream.TAG_FINAL)) {
       this._transportfinished = true
       didBackpressure = this.push(null)
