@@ -6,7 +6,7 @@
   "dependencies": {
     "readable-stream": "^3.0.6",
     "secretstream-stream": "^1.2.1",
-    "simple-handshake": "^1.0.1",
+    "simple-handshake": "^1.1.2",
     "sodium-universal": "^2.0.0"
   },
   "devDependencies": {
