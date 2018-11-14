@@ -305,3 +305,4 @@ class NoisePeer extends stream.Duplex {
 
 module.exports = (...args) => new NoisePeer(...args)
 module.exports.keygen = simpleHandshake.keygen
+module.exports.seedKeygen = simpleHandshake.seedKeygen
