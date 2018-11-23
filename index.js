@@ -290,9 +290,7 @@ class NoisePeer extends stream.Duplex {
     }
   }
 
-  _destroy (err, callback) {
-    this._paused = true
-
+  _cleanup () {
     if (this._handshake.finished === false) this._handshake.destroy()
     if (this._transport) {
       if (this._transport.tx) {
@@ -308,7 +306,15 @@ class NoisePeer extends stream.Duplex {
     if (this._handshake.split) {
       sodium.sodium_memzero(this._handshake.split.tx)
       sodium.sodium_memzero(this._handshake.split.rx)
+
+      this._handshake.split = null
     }
+  }
+
+  _destroy (err, callback) {
+    this._paused = true
+
+    this._cleanup()
 
     this.rawStream.destroy(err)
     callback(err)
