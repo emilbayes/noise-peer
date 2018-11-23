@@ -126,7 +126,7 @@ class NoisePeer extends stream.Duplex {
   }
 
   _writev (chunks, cb) {
-    if (this._handshake.finished === false) {
+    if (this._transport == null) {
       // buffer {data, cb} and wait for handshake to finish succesful
       this._writePending = { chunks, cb }
       return
