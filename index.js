@@ -62,6 +62,7 @@ class NoisePeer extends stream.Duplex {
 
   _sendhandshake () {
     this._handshake.send(null, (err, buf) => {
+      if (this.destroyed) return
       if (err) return this.destroy(err)
 
       this.rawStream.cork() // hack to put buf and header in the same packet
@@ -281,7 +282,7 @@ class NoisePeer extends stream.Duplex {
   }
 
   _onreadable () {
-    while (this._paused === false) {
+    while (this._paused === false && this.destroyed === false) {
       if (this._missing === 0) { // has no framing
         if (this._readframeheader() !== true) break
       } else {
