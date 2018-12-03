@@ -31,8 +31,23 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.on('drain', this._ondrain.bind(this))
     this.rawStream.on('error', this.destroy.bind(this))
 
-
+    var ended = false
+    var finished = false
+    this.rawStream.on('end', () => {
+      if (finished) return this._cleanup()
+      ended = true
+      this._cleanupReadable()
     })
+
+    this.rawStream.on('finish', () => {
+      if (ended) return this._cleanup()
+      finished = true
+      this._cleanupWritable()
+    })
+
+    this.rawStream.on('close', this._onclose.bind(this))
+
+    this.on('finish', this.rawStream.end.bind(this.rawStream))
 
     // Timeout if supported by the underlying stream
     if (this.rawStream.setTimeout) this.setTimeout = this.rawStream.setTimeout.bind(this.rawStream)
