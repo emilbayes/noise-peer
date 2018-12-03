@@ -29,15 +29,9 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.on('readable', this._onreadable.bind(this))
     this.rawStream.on('drain', this._ondrain.bind(this))
     this.rawStream.on('error', this.destroy.bind(this))
-    var self = this
-    this.rawStream.on('close', function () {
-      if (self.destroyed) return
-      if (self._handshake.finished === false) return self.destroy(new Error('Remote closed before handshake could complete (possible MITM vector)'))
-      if (self._transportfinished === false) return self.destroy(new Error('Remote closed without sending a FINISH tag (possible MITM vector)'))
-      self.destroy()
-    })
 
     this.on('finish', this.rawStream.end.bind(this.rawStream))
+    this.rawStream.on('close', this._onclose.bind(this))
 
     // Timeout if supported by the underlying stream
     if (this.rawStream.setTimeout) this.setTimeout = this.rawStream.setTimeout.bind(this.rawStream)
@@ -279,6 +273,13 @@ class NoisePeer extends stream.Duplex {
     const fn = this._draincb
     this._draincb = null
     fn()
+  }
+
+  _onclose () {
+    if (this.destroyed) return
+    if (this._handshake.finished === false) return this.destroy(new Error('Remote closed before handshake could complete (possible MITM vector)'))
+    if (this._transportfinished === false) return this.destroy(new Error('Remote closed without sending a FINISH tag (possible MITM vector)'))
+    this.destroy()
   }
 
   _onreadable () {
