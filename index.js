@@ -64,8 +64,8 @@ class NoisePeer extends stream.Duplex {
       if (this.destroyed) return
       if (err) return this.destroy(err)
 
-      this.rawStream.cork() // hack to put buf and header in the same packet
-      this.rawStream.write(this._frame(buf)) // @mafintosh
+      this.rawStream.cork() // put buf and header in the same packet
+      this.rawStream.write(this._frame(buf))
       if (this._handshake.finished) return this._onhandshake()
       this.rawStream.uncork()
 
@@ -88,8 +88,7 @@ class NoisePeer extends stream.Duplex {
     }
 
     sodium.sodium_memzero(this._handshake.split.tx)
-
-    this.rawStream.write(this._frame(header)) // @mafintosh
+    this.rawStream.write(this._frame(header))
     this.rawStream.uncork()
 
     assert(!this._endImmediately || !this._writePending)
