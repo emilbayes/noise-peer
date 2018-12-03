@@ -17,6 +17,7 @@ class NoisePeer extends stream.Duplex {
     this._transport = null
     // flag to indicate whether transport got a finish message
     this._transportfinished = false
+    this._endImmediately = false
 
     this._missing = 0
     this._paused = false
@@ -30,8 +31,12 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.on('drain', this._ondrain.bind(this))
     this.rawStream.on('error', this.destroy.bind(this))
 
-    this.on('finish', this.rawStream.end.bind(this.rawStream))
     this.rawStream.on('close', this._onclose.bind(this))
+
+    this.on('finish', () => {
+      if (this._transport) return this.rawStream.end()
+      this._endImmediately = true
+    })
 
     // Timeout if supported by the underlying stream
     if (this.rawStream.setTimeout) this.setTimeout = this.rawStream.setTimeout.bind(this.rawStream)
@@ -87,6 +92,8 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.write(this._frame(header)) // @mafintosh
     this.rawStream.uncork()
 
+    assert(!this._endImmediately || !this._writePending)
+    if (this._endImmediately) this.rawStream.end()
     if (this._writePending) this._drainpendingwrite()
 
     this._read()
