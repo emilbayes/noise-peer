@@ -17,7 +17,7 @@ class NoisePeer extends stream.Duplex {
     this._transport = null
     // flag to indicate whether transport got a finish message
     this._transportfinished = false
-    this._endImmediately = false
+    this._endPending = false
 
     this._missing = 0
     this._paused = false
@@ -31,11 +31,7 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.on('drain', this._ondrain.bind(this))
     this.rawStream.on('error', this.destroy.bind(this))
 
-    this.rawStream.on('close', this._onclose.bind(this))
 
-    this.on('finish', () => {
-      if (this._transport) return this.rawStream.end()
-      this._endImmediately = true
     })
 
     // Timeout if supported by the underlying stream
@@ -91,29 +87,25 @@ class NoisePeer extends stream.Duplex {
     this.rawStream.write(this._frame(header))
     this.rawStream.uncork()
 
-    assert(!this._endImmediately || !this._writePending)
-    if (this._endImmediately) this.rawStream.end()
-    if (this._writePending) this._drainpendingwrite()
+    assert(!this._endPending || !this._writePending)
+    if (this._endPending) {
+      this._final(this._endPending)
+    }
 
+    if (this._writePending) this._drainpendingwrite()
     this._read()
   }
 
   _drainpendingwrite () {
     var self = this
-    var missing = self._writePending.chunks.length
-    var error = null
     var chunks = self._writePending.chunks
 
-    for (var i = 0; i < chunks.length; i++) {
-      self._write(chunks[i].chunk, chunks[i].encoding, onwrite)
-    }
+    self._writev(chunks, onwrite)
 
     function onwrite (err) {
-      if (err) error = err
-      if (--missing) return
       var fn = self._writePending.cb
       self._writePending = null
-      return fn(error)
+      return fn(err)
     }
   }
 
@@ -213,8 +205,13 @@ class NoisePeer extends stream.Duplex {
   }
 
   _final (cb) {
-    if (this._transport && this._transport.tx) this._sendtransport(Buffer.alloc(0), secretstream.TAG_FINAL)
-    cb()
+    this._endPending = null
+    if (this._transport && this._transport.tx) {
+      this._sendtransport(Buffer.alloc(0), secretstream.TAG_FINAL)
+      cb()
+    } else {
+      this._endPending = cb
+    }
   }
 
   _frame (buf) {
