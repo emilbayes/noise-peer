@@ -290,13 +290,9 @@ class NoisePeer extends stream.Duplex {
     }
   }
 
-  _cleanup () {
+  _cleanupReadable () {
     if (this._handshake.finished === false) this._handshake.destroy()
     if (this._transport) {
-      if (this._transport.tx) {
-        this._transport.tx.destroy()
-        this._transport.tx = null
-      }
       if (this._transport.rx) {
         this._transport.rx.destroy()
         this._transport.rx = null
@@ -305,10 +301,28 @@ class NoisePeer extends stream.Duplex {
 
     if (this._handshake.split) {
       sodium.sodium_memzero(this._handshake.split.tx)
-      sodium.sodium_memzero(this._handshake.split.rx)
-
-      this._handshake.split = null
     }
+  }
+
+  _cleanupWritable () {
+    if (this._handshake.finished === false) this._handshake.destroy()
+    if (this._transport) {
+      if (this._transport.tx) {
+        this._transport.tx.destroy()
+        this._transport.tx = null
+      }
+    }
+
+    if (this._handshake.split) {
+      sodium.sodium_memzero(this._handshake.split.tx)
+    }
+  }
+
+  _cleanup () {
+    this._cleanupReadable()
+    this._cleanupWritable()
+
+    this._handshake.split = null
   }
 
   _destroy (err, callback) {
