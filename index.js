@@ -47,6 +47,7 @@ class NoisePeer extends stream.Duplex {
     // callback by invoking _read
     this._paused = true
     this._handshake.recv(data, (err, msg) => {
+      if (this.destroyed) return
       if (err) return this.destroy(err)
 
       if (this._handshake.finished) return this._onhandshake()
