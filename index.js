@@ -88,7 +88,8 @@ class NoisePeer extends stream.Duplex {
   _onhandshake () {
     this.emit('handshake', {
       remoteStaticKey: this._handshake.state.rs,
-      remoteEphemeralKey: this._handshake.state.re
+      remoteEphemeralKey: this._handshake.state.re,
+      handshakeHash: this._handshake.handshakeHash
     })
     if (this.destroyed) return
 

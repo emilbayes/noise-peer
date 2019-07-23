@@ -86,11 +86,13 @@ Bubble `timeout` event from the underlying `rawStream` if supported. You should
 call either `.end()` (which sends a `FINISH` message to the other peer) or
 `.destroy()` the stream manually (like eg. `net` specifies).
 
-### `secureStream.on('handshake', {remoteStaticKey, remoteEphemeralKey})`
+### `secureStream.on('handshake', {remoteStaticKey, remoteEphemeralKey, handshakeHash})`
 
 Emitted when the handshaking has succeeded. `remoteStaticKey` may be `null` if
-you're using a `pattern` which does not use or receive a remote static key. Both
-will be Buffers, but be cleared immediately after the handshake event.
+you're using a `pattern` which does not use or receive a remote static key. All
+will be Buffers, with keys be cleared immediately after the handshake event.
+The `handshakeHash` can be used for channel binding as described in the
+[Noise Specficiation](https://noiseprotocol.org/noise.html#channel-binding)
 
 ### Handshake Pattern examples
 
