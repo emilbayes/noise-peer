@@ -80,6 +80,10 @@ is important to know that an active adversary did not truncate the stream.
 Call `setTimeout` on the underlying `rawStream` if supported. This function will
 be undefined if not supported
 
+### `secureStream.on('end')`
+
+When one side calls `secureStream.end()`, the other side must also call `secureStream.end()` from its `end` event.  When using a library like [pump](https://github.com/mafintosh/pump), this will happen automatically.  Otherwise you will likely need to handle this event and call `secureStream.end()` from both ends to handle either side ending the secure stream.
+
 ### `secureStream.on('timeout')`
 
 Bubble `timeout` event from the underlying `rawStream` if supported. You should
