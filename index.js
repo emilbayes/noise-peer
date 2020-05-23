@@ -2,7 +2,7 @@ var secretstream = require('secretstream-stream')
 var simpleHandshake = require('simple-handshake')
 var stream = require('readable-stream')
 var assert = require('nanoassert')
-var sodium = require('sodium-universal')
+var sodium = require('sodium-native')
 
 class NoisePeer extends stream.Duplex {
   constructor (rawStream, isInitiator, opts) {
@@ -96,11 +96,12 @@ class NoisePeer extends stream.Duplex {
     var header = Buffer.alloc(secretstream.HEADERBYTES)
 
     this._transport = {
-      tx: secretstream.encrypt(header, this._handshake.split.tx),
+      tx: secretstream.encrypt(header, this._handshake.split.tx.subarray(0, 32)),
       rx: null
     }
 
-    sodium.sodium_memzero(this._handshake.split.tx)
+    sodium.sodium_free(this._handshake.split.tx)
+    this._handshake.split.tx = null
     this.rawStream.write(this._frame(header))
     this.rawStream.uncork()
 
@@ -127,8 +128,9 @@ class NoisePeer extends stream.Duplex {
   }
 
   _onheader (header) {
-    this._transport.rx = secretstream.decrypt(header, this._handshake.split.rx)
-    sodium.sodium_memzero(this._handshake.split.rx)
+    this._transport.rx = secretstream.decrypt(header, this._handshake.split.rx.subarray(0, 32))
+    sodium.sodium_free(this._handshake.split.rx)
+    this._handshake.split.rx = null
   }
 
   _write (chunk, encoding, cb) {
@@ -321,8 +323,8 @@ class NoisePeer extends stream.Duplex {
       }
     }
 
-    if (this._handshake.split) {
-      sodium.sodium_memzero(this._handshake.split.tx)
+    if (this._handshake.split && this._handshake.split.rx) {
+      sodium.sodium_free(this._handshake.split.rx)
     }
   }
 
@@ -335,8 +337,8 @@ class NoisePeer extends stream.Duplex {
       }
     }
 
-    if (this._handshake.split) {
-      sodium.sodium_memzero(this._handshake.split.tx)
+    if (this._handshake.split && this._handshake.split.tx) {
+      sodium.sodium_free(this._handshake.split.tx)
     }
   }
 

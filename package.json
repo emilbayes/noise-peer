@@ -5,17 +5,18 @@
   "main": "index.js",
   "dependencies": {
     "readable-stream": "^3.0.6",
-    "secretstream-stream": "^1.2.1",
-    "simple-handshake": "^1.2.0",
-    "sodium-universal": "^2.0.0"
+    "secretstream-stream": "^2.0.0",
+    "simple-handshake": "^2.0.0",
+    "sodium-native": "^3.1.1"
   },
   "devDependencies": {
-    "c8": "^3.2.0",
+    "c8": "^7.1.2",
     "choppa": "^1.0.2",
-    "duplexify": "^3.6.0",
-    "pumpify": "^1.5.1",
-    "tape": "^4.8.0",
-    "utp-native": "^2.1.0"
+    "duplexify": "^4.1.1",
+    "pumpify": "^2.0.1",
+    "standard": "^14.3.4",
+    "tape": "^5.0.0",
+    "utp-native": "^2.1.10"
   },
   "scripts": {
     "test": "tape tests/**.js",
