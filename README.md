@@ -94,6 +94,10 @@ will be Buffers, with keys be cleared immediately after the handshake event.
 The `handshakeHash` can be used for channel binding as described in the
 [Noise Specficiation](https://noiseprotocol.org/noise.html#channel-binding)
 
+### `secureSteam.on('connected')`
+
+Emitted when the secure connection is fully established
+
 ### Handshake Pattern examples
 
 To have mutual authentication use the `XX` pattern, add a static keypair and

@@ -131,6 +131,7 @@ class NoisePeer extends stream.Duplex {
     this._transport.rx = secretstream.decrypt(header, this._handshake.split.rx.subarray(0, 32))
     sodium.sodium_free(this._handshake.split.rx)
     this._handshake.split.rx = null
+    this.emit('connected')
   }
 
   _write (chunk, encoding, cb) {
