@@ -1,7 +1,7 @@
 var secretstream = require('secretstream-stream')
 var simpleHandshake = require('simple-handshake')
 var stream = require('readable-stream')
-var assert = require('nanoassert')
+var assert = require('assert')
 var sodium = require('sodium-native')
 
 class NoisePeer extends stream.Duplex {
